@@ -350,5 +350,6 @@ MigrationBackup/
 .ionide/
 
 # Logs
-data/*.csv
+gridSearch/data/*.csv
+gridSearch/data/*.xlsx
 *.logs
