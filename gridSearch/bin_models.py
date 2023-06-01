@@ -77,7 +77,7 @@ MODELS = {
     'xgboost': [get_xgb_clf(), XGB_PARAM_GRID]
 }
 
-def run_hyperparameter_tuning(model, param_grid, X, y, cv):
+def run_hyperparameter_tuning(name, model, param_grid, X, y, cv):
     # Compute sample weights
     sample_weight = compute_sample_weight('balanced', y)
     # Define the grid search
@@ -91,7 +91,10 @@ def run_hyperparameter_tuning(model, param_grid, X, y, cv):
                              return_train_score=True,
                              n_jobs=-1)
     # Fit the model
-    best_clf = clf.fit(X, y, sample_weight)
+    if name == 'logistic_regression':
+        best_clf = clf.fit(X, y, logistic_classifier__sample_weight=sample_weight)
+    else:
+        best_clf = clf.fit(X, y, sample_weight=sample_weight) 
     return best_clf
 
 def main():
@@ -105,17 +108,17 @@ def main():
     cv_splits = list(cv.split(X, y))
     np.save('bin_grid_results/cv_splits.npy', cv_splits)
 
-    for model, (clf, param_grid) in MODELS.items():
-        print('Training', model)
-        clf = run_hyperparameter_tuning(clf, param_grid, X, y, cv)    
+    for name, (clf, param_grid) in MODELS.items():
+        print('Training', name)
+        clf = run_hyperparameter_tuning(name, clf, param_grid, X, y, cv)    
         print('\tBest params', clf.best_params_)
         print('\tBest score', clf.best_score_)
         cv_results = pd.DataFrame.from_dict(clf.cv_results_)
-        cv_results.to_csv(f'bin_grid_results/logs/model_{model}_cv_results.csv')
-        if model == 'xgboost':
-            clf.best_estimator_.save_model(f'bin_grid_results/models/model_{model}_best_estimator.json')
+        cv_results.to_csv(f'bin_grid_results/logs/model_{name}_cv_results.csv')
+        if name == 'xgboost':
+            clf.best_estimator_.save_model(f'bin_grid_results/models/model_{name}_best_estimator.json')
         else:
-            joblib.dump(clf.best_estimator_, f'bin_grid_results/models/model_{model}_best_estimator.joblib')
+            joblib.dump(clf.best_estimator_, f'bin_grid_results/models/model_{name}_best_estimator.joblib')
 
 if __name__ == '__main__':
     main()
