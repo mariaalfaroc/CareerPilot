@@ -1,4 +1,5 @@
 import os
+import joblib
 import warnings
 # Disable warnings
 warnings.filterwarnings('ignore')
@@ -6,10 +7,27 @@ warnings.filterwarnings('ignore')
 import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
 
 from data.load_data import read_and_preprocess_class_data
+
+###### LOGISTIC REGRESION:
+LOGIT_PARAM_GRID= {
+    'logistic_classifier__penalty' : ['l2', None],
+    'logistic_classifier__C' : np.logspace(-4, 4, 20),
+    'logistic_classifier__solver' : ['newton-cg', 'sag', 'saga', 'lbfgs'],
+    'logistic_classifier__max_iter' : [100, 1000, 2500, 5000]
+}
+def get_logit_clf():
+    return Pipeline([
+        ('scaler', StandardScaler()),
+        ('logistic_classifier', LogisticRegression(multi_class='multinomial', fit_intercept=True, n_jobs=-1, random_state=42))
+    ])
 
 ###### XGBOOST:
 XGB_PARAM_GRID = {
@@ -23,21 +41,25 @@ def get_xgb_clf():
 ####################################################################################################
 
 MODELS = {
+    'logistic_regression': [get_logit_clf(), LOGIT_PARAM_GRID],
     'xgboost': [get_xgb_clf(), XGB_PARAM_GRID]
 }
 
 def run_hyperparameter_tuning(model, param_grid, X, y, cv):
+    # Compute sample weights
+    sample_weight = compute_sample_weight('balanced', y)
+    # Define the grid search
     clf = RandomizedSearchCV(model,
                              param_distributions=param_grid,
                              n_iter=10,
-                             refit=True,
+                             refit='f1_weighted',
                              cv=cv,
                              verbose=2,
-                             scoring='accuracy',
+                             scoring=['accuracy', 'f1_weighted', 'roc_auc_ovr'],
                              return_train_score=True,
                              n_jobs=-1)
     # Fit the model
-    best_clf = clf.fit(X, y)
+    best_clf = clf.fit(X, y, sample_weight=sample_weight)
     return best_clf
 
 def main():
@@ -62,7 +84,10 @@ def main():
         print('\tBest score', clf.best_score_)
         cv_results = pd.DataFrame.from_dict(clf.cv_results_)
         cv_results.to_csv(f'class_grid_results/logs/model_{model}_cv_results.csv')
-        clf.best_estimator_.save_model(f'class_grid_results/models/model_{model}_best_estimator.json')
+        if model == 'xgboost':
+            clf.best_estimator_.save_model(f'class_grid_results/models/model_{model}_best_estimator.json')
+        else:
+            joblib.dump(clf.best_estimator_, f'class_grid_results/models/model_{model}_best_estimator.joblib')
 
 if __name__ == '__main__':
     main()

@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
 
@@ -26,7 +27,7 @@ LOGIT_PARAM_GRID= {
 def get_logit_clf():
     return Pipeline([
         ('scaler', StandardScaler()),
-        ('logistic_classifier', LogisticRegression(fit_intercept=True, class_weight='balanced'))
+        ('logistic_classifier', LogisticRegression(fit_intercept=True, n_jobs=-1, random_state=42))
     ])
 
 ###### DECISION TREE:
@@ -38,7 +39,7 @@ DT_PARAM_GRID = {
     'max_leaf_nodes': [4, 8, 16],
 }   
 def get_dt_clf(max_depth=None):
-    return DecisionTreeClassifier(class_weight='balanced', max_depth=max_depth, random_state=42)
+    return DecisionTreeClassifier(max_depth=max_depth, random_state=42)
 
 ###### RANDOM FOREST:
 RF_PARAM_GRID = {
@@ -46,7 +47,7 @@ RF_PARAM_GRID = {
 }
 RF_PARAM_GRID.update(DT_PARAM_GRID)
 def get_rf_clf():
-    return RandomForestClassifier(class_weight='balanced', random_state=42)
+    return RandomForestClassifier(n_jobs=-1, random_state=42)
 
 ###### ADABOOST:
 ADA_PARAM_GRID = {
@@ -64,7 +65,7 @@ XGB_PARAM_GRID = {
     'learning_rate': np.arange(0.1, 2.1, 0.1).tolist(),
 }
 def get_xgb_clf():
-    return XGBClassifier(objective='binary:logistic', n_jobs=-1, tree_method='gpu_hist', gpu_id=0)
+    return XGBClassifier(objective='binary:logistic', n_jobs=-1, tree_method='gpu_hist', gpu_id=0, random_state=42)
 
 ####################################################################################################
 
@@ -77,17 +78,20 @@ MODELS = {
 }
 
 def run_hyperparameter_tuning(model, param_grid, X, y, cv):
+    # Compute sample weights
+    sample_weight = compute_sample_weight('balanced', y)
+    # Define the grid search
     clf = RandomizedSearchCV(model,
                              param_distributions=param_grid,
                              n_iter=10,
-                             refit=True,
+                             refit='f1',
                              cv=cv,
                              verbose=2,
-                             scoring='accuracy',
+                             scoring=['accuracy', 'f1', 'f1_weighted', 'roc_auc'],
                              return_train_score=True,
                              n_jobs=-1)
     # Fit the model
-    best_clf = clf.fit(X, y)
+    best_clf = clf.fit(X, y, sample_weight)
     return best_clf
 
 def main():
