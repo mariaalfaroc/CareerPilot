@@ -351,3 +351,4 @@ MigrationBackup/
 
 # Logs
 data/*.csv
+*.logs
