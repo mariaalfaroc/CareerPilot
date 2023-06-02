@@ -1,0 +1,3 @@
+- Añadir licencia (creo que la MIT está bien)
+- Take a look at: https://huggingface.co/spaces/gradio/xgboost-income-prediction-with-explainability/blob/main/app.py
+- Cuando se tenga el modelo final, se puede hacer un refit y crear tres particiones y sacar: la confusion matrix y el el roc auc curve
