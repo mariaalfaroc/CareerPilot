@@ -131,7 +131,7 @@ def plot_sector(input, model):
 
 ##############################################################################################################
 
-def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, expe_tcompleto, paro, mes_actual, expe_sector):
+def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, expe_tcompleto, paro, mes_actual, expe_sector, api):
     # Transform user input into a dataframe
     user = {'sexo': sexo,
             'edad': edad,
