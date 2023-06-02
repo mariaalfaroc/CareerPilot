@@ -13,3 +13,7 @@ Meter txt con requirements y como ejectuar la isntalacion
 take a look at : https://huggingface.co/spaces/gradio/xgboost-income-prediction-with-explainability/blob/main/app.py
 
 when we have the final values
+
+
+Cuando se tenga el modelo final, se puede hacer un refit y crear tres particiones y sacar:
+- la confusion matrix y el el roc auc curve

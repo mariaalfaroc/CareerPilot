@@ -20,7 +20,7 @@ from data.load_data import read_and_preprocess_class_data
 LOGIT_PARAM_GRID= {
     'logistic_classifier__penalty' : ['l2', None],
     'logistic_classifier__C' : np.logspace(-4, 4, 20),
-    'logistic_classifier__solver' : ['newton-cg', 'sag', 'saga', 'lbfgs'],
+    'logistic_classifier__solver' : ['newton-cg', 'lbfgs'],  # saga and sag take a lot of time!
     'logistic_classifier__max_iter' : [100, 1000, 2500, 5000]
 }
 def get_logit_clf():
