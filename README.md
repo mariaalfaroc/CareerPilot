@@ -6,6 +6,12 @@
 ![XGBoost](https://img.shields.io/badge/XGBoost-%23ffffff.svg?style=flat&logo=xgboost&logoColor=%23000)
 ![MIT License](https://img.shields.io/badge/license-MIT-%23000.svg?style=flat)
 
+
+TODO: Párrafo hablando de la app
+
+Datos:
+
+
 Hablar de los datos
 
 Meter txt con requirements y como ejectuar la isntalacion

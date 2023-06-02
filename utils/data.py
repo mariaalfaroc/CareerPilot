@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def transform_data(data):
     """Transforms the data to be used in the model.
     data = {'sexo': str,
@@ -13,19 +12,21 @@ def transform_data(data):
             'expe_perma': str,
             'expe_tcompleto': str,
             'paro': str,
-            'mes_actual': str}"""
+            'mes_actual': str,
+            'expe_sector: list}"""
     # First, create a DataFrame
     df = pd.DataFrame(data, index=[0])
   
     # Define the desired order of columns
-    desired_order = ['minusv', 'espanol', 'nhijos', 'sexo_Male', 'edad_cat_16-24',
-                     'edad_cat_25-29', 'edad_cat_30-45', 'educa_cat_Primarios',
-                     'educa_cat_Secundarios', 'educa_cat_Sin estudios',
-                     'educa_cat_Universitarios', 'expe_1-2', 'expe_<1', 'expe_>2',
-                     'expe_perma_1-2', 'expe_perma_<1', 'expe_perma_>2',
-                     'expe_tcompleto_1-2', 'expe_tcompleto_<1', 'expe_tcompleto_>2',
-                     'paro_1-2a', 'paro_4-6m', 'paro_7-12m', 'paro_>2a','mes_2',
-                     'mes_3', 'mes_4', 'mes_5', 'mes_6', 'mes_7', 'mes_8', 'mes_9',
+    desired_order = ['minusv', 'espanol', 'nhijos', 'expe_Administrativas', 'expe_Comercio',
+                     'expe_Construccion', 'expe_Hosteleria', 'sexo_Male',
+                     'edad_cat_16-24', 'edad_cat_25-29', 'edad_cat_30-45',
+                     'educa_cat_Primarios', 'educa_cat_Secundarios',
+                     'educa_cat_Sin estudios', 'educa_cat_Universitarios', 'expe_1-2',
+                     'expe_<1', 'expe_>2', 'expe_perma_1-2', 'expe_perma_<1',
+                     'expe_perma_>2', 'expe_tcompleto_1-2', 'expe_tcompleto_<1',
+                     'expe_tcompleto_>2', 'paro_1-2a', 'paro_4-6m', 'paro_7-12m', 'paro_>2a',
+                     'mes_2', 'mes_3', 'mes_4', 'mes_5', 'mes_6', 'mes_7', 'mes_8', 'mes_9',
                      'mes_10', 'mes_11', 'mes_12']
   
     # Fill frame
@@ -63,8 +64,12 @@ def transform_data(data):
     df['mes_10'] = (df['mes_actual'] == 'Octubre').astype(int)
     df['mes_11'] = (df['mes_actual'] == 'Noviembre').astype(int)
     df['mes_12'] = (df['mes_actual'] == 'Diciembre').astype(int)  
-    df = df.drop(['mes_actual', 'sexo', 'edad', 'educa_cat', 'expe', 'expe_perma', 'expe_tcompleto', 'paro'], axis=1)
-
+    df['expe_Construccion'] = df['expe_sector'].apply(lambda x: 'Construcción' in x).astype(int)
+    df['expe_Comercio'] = df['expe_sector'].apply(lambda x: 'Comercio' in x).astype(int)
+    df['expe_Hosteleria'] = df['expe_sector'].apply(lambda x: 'Hostelería' in x).astype(int)
+    df['expe_Administrativas'] = df['expe_sector'].apply(lambda x: 'Administrativas y servicios auxiliares' in x).astype(int) 
+    df = df.drop(['mes_actual', 'sexo', 'edad', 'educa_cat', 'expe', 'expe_perma', 'expe_tcompleto', 'paro', 'expe_sector'], axis=1)
+ 
     # Reorder the columns
     df = df.reindex(columns=desired_order)
 
@@ -77,7 +82,7 @@ def clean_sector(input):
     input.loc[input['classes'] == 'Construccion', 'sector_clean'] = 'Construcción'
     input.loc[input['classes'] == 'Comercio', 'sector_clean'] = 'Comercio'
     input.loc[input['classes'] == 'Transporte', 'sector_clean'] = 'Transporte y almacenamiento'
-    input.loc[input['classes'] == 'Hosteleria', 'sector_clean'] = 'Hosteleria'
+    input.loc[input['classes'] == 'Hosteleria', 'sector_clean'] = 'Hostelería'
     input.loc[input['classes'] == 'Teleco', 'sector_clean'] = 'Información y comunicaciones'
     input.loc[input['classes'] == 'Finanzas', 'sector_clean'] = 'Finanzas, seguros e inmobiliarias'
     input.loc[input['classes'] == 'Cientificas', 'sector_clean'] = 'Profesionales, científicas y técnicas'

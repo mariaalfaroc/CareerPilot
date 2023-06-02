@@ -22,21 +22,21 @@ def plot_months(input, model):
             'expe_perma': str,
             'expe_tcompleto': str,
             'paro': str,
-            'mes_actual': str}
+            'mes_actual': str,
+            'expe_sector: list}
     This is the input format of the function transform_data in utils/data.py"""
     months = ['Enero', 'Febrero', 'Marzo' ,  'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    months_num = [i + 1 for i in range(len(months))]
     
     # Iterate over months
     df_months = pd.DataFrame()
-    for i, j in zip(months, months_num):
-      mes_actual = input['mes_actual']
-      input['mes_actual'] = i
+    mes_actual = input['mes_actual']
+    for id, m in enumerate(months, start=1):
+      input['mes_actual'] = m
       alt_df = transform_data(input)
 
       # Obtain predictions from binary model
       probs = model.predict_proba(alt_df)[0, 1]*100
-      new_row = pd.DataFrame({'mes': [i], 'prob': [probs], 'mes_num': [j]}, columns=['mes', 'prob', 'mes_num'])
+      new_row = pd.DataFrame({'mes': [m], 'prob': [probs], 'mes_num': [id]}, columns=['mes', 'prob', 'mes_num'])
       df_months = pd.concat([df_months, new_row], ignore_index=True)
 
     # Keep only the first six months after the current month
@@ -87,7 +87,8 @@ def plot_sector(input, model):
             'expe_perma': str,
             'expe_tcompleto': str,
             'paro': str,
-            'mes_actual': str}
+            'mes_actual': str,
+            'expe_sector: list}
     This is the input format of the function transform_data in utils/data.py"""
     user_df = transform_data(input)
 
@@ -102,7 +103,7 @@ def plot_sector(input, model):
     desc_plot = desc_plot.sort_values(by='probabilities', ascending=False)
 
     # Set the data 
-    fig, ax = plt.subplots(figsize=(9, 4.8)) 
+    fig, ax = plt.subplots() 
     y_pos = np.arange(len(desc_plot.sector_clean))
 
     ax.barh(y_pos, desc_plot.probabilities, align='center')
@@ -130,7 +131,7 @@ def plot_sector(input, model):
 
 ##############################################################################################################
 
-def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, expe_tcompleto, paro, mes_actual, api):
+def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, expe_tcompleto, paro, mes_actual, expe_sector):
     # Transform user input into a dataframe
     user = {'sexo': sexo,
             'edad': edad,
@@ -142,7 +143,8 @@ def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, e
             'expe_perma': expe_perma,
             'expe_tcompleto': expe_tcompleto,
             'paro': paro,
-            'mes_actual': mes_actual}
+            'mes_actual': mes_actual,
+            'expe_sector': expe_sector}
     user_df = transform_data(user)
 
     # TODO: Load models (ahora mismo son de prueba pero hay que cambiarlos por los finales)
@@ -200,6 +202,7 @@ def get_interface():
                                 gr.Dropdown(['Sin experiencia', 'Menos de 1 año', 'Entre 1-2 años', 'Más de 2 años'], label='Experiencia laboral a tiempo completo'),
                                 gr.Dropdown(['Entre 0-3 meses', 'Entre 4-6 meses', 'Entre 7-12 meses', 'Entre 1-2 años', 'Más de 2 años'], label='Tiempo en paro'),
                                 gr.Dropdown(['Enero', 'Febrero', 'Marzo' ,  'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'], label='Mes actual'),
+                                gr.CheckboxGroup(['Construcción', 'Comercio', 'Hostelería', 'Administrativas y servicios auxiliares'], label='Experiencia laboral', info='¿Has trabajado en estos sectores durante los últimos 6 meses?'),
                                 gr.Textbox(placeholder='OpenAI API Key (opcional)', info='Introduce tu clave de la API de OpenAI si tienes una. Esto hará que ChatGPT interprete los resultados obtenidos por CareerPilot.', label='OpenAI API Key (opcional)', type='password')],
                         title='CareerPilot: una aplicación para entender tu perfil laboral',
                         description='Descubre tu destino laboral con CareerPilot: ¡la aplicación que predice tu probabilidad de empleo en el próximo mes! Obtén información detallada sobre el sector con más oportunidades, recomendaciones de ocupaciones y formaciones clave, además de dónde buscarlas. ¡Impulsa tu carrera con Careerpilot y toma decisiones informadas para alcanzar el éxito profesional!',
