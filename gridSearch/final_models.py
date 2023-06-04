@@ -48,6 +48,7 @@ def main():
     os.makedirs('final_results', exist_ok=True)
     os.makedirs('final_results/models', exist_ok=True)
     os.makedirs('final_results/logs', exist_ok=True)
+    os.makedirs('final_results/plots', exist_ok=True)
 
     for name, model in MODELS.items():
         print(f'Training {name} model'.upper())
@@ -67,6 +68,9 @@ def main():
         cv_splits = list(cv.split(X, y))
         np.save(f'final_results/{name}_cv_splits.npy', cv_splits)
 
+        # Compute sample weight
+        sample_weight = compute_sample_weight('balanced', y)
+
         # Cross-validation
         acc_all = []
         f1_all = []
@@ -75,11 +79,8 @@ def main():
             print(f'\tFold {i}')
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            # Compute sample weights
-            train_sample_weight = compute_sample_weight('balanced', y_train)
-            test_sample_weight = compute_sample_weight('balanced', y_test)
             # 1) Train
-            model = model.fit(X_train, y_train, sample_weight=train_sample_weight)
+            model = model.fit(X_train, y_train, sample_weight=sample_weight[train_index])
             # 2) Predict
             y_pred = model.predict(X_test)
             # 3) Evaluate
@@ -102,7 +103,7 @@ def main():
             # Multiclass. In the classification report:
             # - Accuracy -> row: accuracy, column: f1-score
             # - F1 Weighted -> row: weighted avg, column: f1-score
-            report = classification_report(y_test, y_pred, sample_weight=test_sample_weight, output_dict=True)
+            report = classification_report(y_test, y_pred, sample_weight=sample_weight[test_index], output_dict=True)
             # - Accuracy
             acc_all.append(report['accuracy'])
             print(f'\tAccuracy = {report["accuracy"]:.2f}')
@@ -120,8 +121,8 @@ def main():
             if name == 'binary':
                 # Positive class probabilities
                 y_pred_probs = model.predict_proba(X_test)[:, 1]
-                fpr, tpr, thresholds = roc_curve(y_test, y_pred_probs, pos_label=1, sample_weight=test_sample_weight)
-                auc = roc_auc_score(y_test, y_pred_probs, sample_weight=test_sample_weight)
+                fpr, tpr, thresholds = roc_curve(y_test, y_pred_probs, pos_label=1, sample_weight=sample_weight[test_index])
+                auc = roc_auc_score(y_test, y_pred_probs, sample_weight=sample_weight[test_index])
                 # Plotting the ROC curve
                 plt.plot(fpr, tpr, label=f'Curva ROC (área = {auc:.2f})')
                 plt.plot([0, 1], [0, 1], 'k--')  # Diagonal line
@@ -135,7 +136,7 @@ def main():
                 plt.savefig(f'final_results/plots/{name}_roc_curve_fold_{i}.png')
                 plt.close()
             # 3.5) Compute confusion matrix
-            cm = confusion_matrix(y_test, y_pred, sample_weight=test_sample_weight)
+            cm = confusion_matrix(y_test, y_pred, sample_weight=sample_weight[test_index])
             sns.heatmap(cm, annot=True, fmt='.0f', cmap='Blues')
             plt.title('Matriz de Confusión')
             plt.xlabel('Predicho')
@@ -152,7 +153,7 @@ def main():
         
         # Refit model on all data
         print('Refitting model on all data...', end=' ', flush=True)
-        model = model.fit(X, y, sample_weight=compute_sample_weight('balanced', y))
+        model = model.fit(X, y, sample_weight=sample_weight)
         # Save model
         model.save_model(f'final_results/models/{name}_model.json')
         print('Done')
