@@ -10,7 +10,9 @@ def load_model(path):
         return joblib.load(path)
     # XGBoost
     elif path.endswith('.json'):
-        return XGBClassifier().load_model(path)
+        model = XGBClassifier()
+        model.load_model(path)
+        return model
     # Pickle
     elif path.endswith('.pkl'):
         with open(path, 'rb') as file:

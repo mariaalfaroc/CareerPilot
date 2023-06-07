@@ -15,7 +15,7 @@ def transform_data(data):
             'mes_actual': str,
             'expe_sector: list}"""
     # First, create a DataFrame
-    df = pd.DataFrame(data, index=[0])
+    df = pd.DataFrame([data])
   
     # Define the desired order of columns
     desired_order = ['minusv', 'espanol', 'nhijos', 'expe_Administrativas', 'expe_Comercio',

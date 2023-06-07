@@ -74,7 +74,7 @@ def plot_months(input, model):
     # Return the PIL Image object
     return pil_image
 
-def plot_sector(input, model):
+def plot_sector(input, model, model_classes):
     """Plot the probability of finding a job in the next six months, starting from the current month.
     The plot is grouped by sector.
     input = {'sexo': str,
@@ -94,7 +94,7 @@ def plot_sector(input, model):
 
     # Obtain predictions from multinominal model
     probabilities = model.predict_proba(user_df).reshape(15,)
-    proba_df = pd.DataFrame({'classes': model.classes_, 'probabilities': probabilities})
+    proba_df = pd.DataFrame({'classes': model_classes, 'probabilities': probabilities})
     proba_df = proba_df.drop(proba_df[proba_df['classes'] == 'Paro'].index)
     proba_df = clean_sector(proba_df)
     
@@ -147,9 +147,9 @@ def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, e
             'expe_sector': expe_sector}
     user_df = transform_data(user)
 
-    # TODO: Load models (ahora mismo son de prueba pero hay que cambiarlos por los finales)
-    binary = load_model('models/binclass.pkl')
-    multiclass = load_model('models/multiclass.pkl')
+    binary = load_model('gridSearch/final_results/models/binary_model.json')
+    multiclass = load_model('gridSearch/final_results/models/multiclass_model.json')
+    multiclass_classes = np.load('gridSearch/final_results/label_encoder.npy', allow_pickle=True)
 
     # Binary model - how likely is to be employed
     probabilities = binary.predict_proba(user_df)
@@ -157,9 +157,8 @@ def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, e
     print_user_proba = f'Probabilidad de estar empleado el próximo mes:\n{user_proba:.0f}%'
 
     # Multiclass model - how likely is to be employed at a certain sector
-    # TODO: Do a quick check to see if we need the label encoder
     probabilities = multiclass.predict_proba(user_df).reshape(15,)
-    proba_df = pd.DataFrame({'classes': multiclass.classes_, 'probabilities': probabilities})
+    proba_df = pd.DataFrame({'classes': multiclass_classes, 'probabilities': probabilities})
     proba_df = proba_df.drop(proba_df[proba_df['classes'] == 'Paro'].index)
     proba_df = clean_sector(proba_df)
 
@@ -184,10 +183,10 @@ def profiling(sexo, edad, nijos, espanol, minusv, educa_cat, expe, expe_perma, e
             messages=[{'role': 'user', 'content': prompt}]
         )
         print_gpt = response.choices[0].message.content
-        return f'{print_user_proba}\n\n{print_sector_proba}\n\nDescripción de los resultados:\n\n{print_gpt}', plot_sector(user, multiclass), plot_months(user, binary)
+        return f'{print_user_proba}\n\n{print_sector_proba}\n\nDescripción de los resultados:\n\n{print_gpt}', plot_sector(user, multiclass, multiclass_classes), plot_months(user, binary)
     else:
         # No GPT prompt
-        return f'{print_user_proba}\n\n{print_sector_proba}', plot_sector(user, multiclass), plot_months(user, binary)
+        return f'{print_user_proba}\n\n{print_sector_proba}', plot_sector(user, multiclass, multiclass_classes), plot_months(user, binary)
 
 def get_interface():
     return gr.Interface(profiling,
