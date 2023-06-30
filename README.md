@@ -101,7 +101,7 @@ Se ha llevado a cabo una comparativa de varios modelos utilizando un enfoque de 
 
 Para poder ejecutarlos, así como modificar los modelos existentes y la búsqueda de hiperparámetros o añadir nuevos modelos, es necesario contar con los [**datos**](#importante).
 
-Puedes encontrar información más detallada sobre el entrenamiento de los modelos en nuestro artículo en [**Medium**]().
+Puedes encontrar información más detallada sobre el entrenamiento de los modelos en nuestro artículo en [**Medium**](https://medium.com/@marialfacon/careerpilot-41630f8b27d0).
 
 ## **Licencia**
 
